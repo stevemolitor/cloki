@@ -1,0 +1,4 @@
+(ns 'cloki)
+
+(defprotocol Page)
+
