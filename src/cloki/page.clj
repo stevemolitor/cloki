@@ -31,12 +31,14 @@ include :bot (defaults to true), :summary and :minor (for a minor edit).")
   (put [page params]
        (let [session (:session page)
              token (edit-token session)]
+;         (println "in put, session rec: " session)
          (post session (merge params {"action" "edit", "token" token, "title" (:title page)}))))
 
   (delete [page]
           (if (get-content page)
             (let [session (:session page)
                   token (edit-token session)]
+;              (println "in delete, session rec: " session)              
               (post session {"action" "delete", "token" token, "title" (:title page)})
               )))
   )

@@ -1,6 +1,7 @@
 (ns cloki-test
   (:use clojure.test)
-  (:use cloki))
+  (:use cloki)
+ )
 
 (def test-wiki "http://localhost/~steve/mediawiki/api.php")
 (def test-user "Admin")
@@ -29,6 +30,8 @@
     (let [page (get-page session "TestPage")]
       (put page {:text "page content"})
       (= "page content" (get-content page))
+      (delete page)
+      (is (nil? (get-content page)))
       )))
 
 (deftest test-examples

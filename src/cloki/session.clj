@@ -36,10 +36,12 @@ multiple times to edit any page.")
            (let [params (stringify-keys (merge {"format" "xml"} params))
                  state (:state session)
                  resp (http/request (:url session) method {} (:cookies @state) params)
+                 cookies (:cookies resp)
                  xml (zip-xml resp)]
              (check-response method (:url session) params xml)
-             (dosync
-              (alter state assoc :cookies (:cookies resp)))
+             (if (not (nil? cookies))
+               (dosync
+                (alter state assoc :cookies cookies)))
              xml))
 
   (query [session params] (request session (merge params {"action" "query"}) "get"))
