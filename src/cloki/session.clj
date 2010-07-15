@@ -65,9 +65,7 @@
                         edit-token (xml1-> xml :query :pages :page (attr :edittoken))]
                     (dosync
                      (alter state assoc :edit-token edit-token)))))
-              (:edit-token @(:state session)))
-  
-  )
+              (:edit-token @(:state session))))
 
 (defn login [url user password & domain]
   "Logins into wiki, returning a cloki/SessionData record satisfying the Wiki Session protocol. 
@@ -94,12 +92,8 @@
 
 (defmacro with-login [bindings & body]
   "Calls logut on session binding in finally clause."
-  (cond
-   (= (count bindings) 0) `(do ~@body)
-   (symbol? (bindings 0)) `(let ~(subvec bindings 0 2)
-                             (try
-                               (with-open ~(subvec bindings 2) ~@body)
-                               (finally
-                                (. ~(bindings 0) logout))))
-   :else (throw (IllegalArgumentException.
-                 "with-login only allows Symbols in bindings"))))
+  `(let ~(subvec bindings 0 2)
+     (try
+       (with-open ~(subvec bindings 2) ~@body)
+       (finally
+        (. ~(bindings 0) logout)))))
