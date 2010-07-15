@@ -5,9 +5,12 @@
 
   (request [session params method] "Executes HTTP request to mediawiki.
 
-Returns zip of xml response.  Updates session state as required. Throws
-java.io.IOException if errors are found in the response.  Response format
-defaults to 'xml'; use the :format parameter to specify a different format.")
+    Returns zip of xml response.  Updates session state as required. Throws
+    java.io.IOException if errors are found in the response.  Response format
+    defaults to 'xml'; use the :format parameter to specify a different format.
+     
+    This function is provided for Mediawiki API functionality that cloki has not (yet) 
+    wrapped and the caller needs to make a lower level request using the current session.")
 
   (query [session params] "Executes query action to mediawiki.")
   
@@ -16,16 +19,13 @@ defaults to 'xml'; use the :format parameter to specify a different format.")
   (logout [session] "Logs out of the mediawiki session, erasing login cookie and edit token.")
 
   (get-page [session title] "Returns a cloki/PageData record the satisifies the cloki/Page protocol.
-
-Use to create/update/delete the page with the given title.")
+    Use to create/update/delete the page with the given title.")
   
   (edit-token [session] "Lazily retrieves and stores edit token from wiki.
 
-The edit token is used internally by cloki to create and save pages.  Curiously
-the mediawiki API only requires one edit token per session that can be reused
-multiple times to edit any page.")
-    
-    )
+    The edit token is used internally by cloki to create and save pages.  Curiously
+    the mediawiki API only requires one edit token per session that can be reused
+    multiple times to edit any page."))
 
 (defrecord SessionState [cookies edit-token])
 
@@ -59,19 +59,19 @@ multiple times to edit any page.")
             (PageData. session title))
 
   (edit-token [session]
-   (let [state (:state session)]
-     (when-not (:edit-token @state)
-       (let [xml (query session {"prop" "info", "intoken" "edit", "titles" "dummy page"})
-             edit-token (xml1-> xml :query :pages :page (attr :edittoken))]
-         (dosync
-          (alter state assoc :edit-token edit-token)))))
-   (:edit-token @(:state session)))
+              (let [state (:state session)]
+                (when-not (:edit-token @state)
+                  (let [xml (query session {"prop" "info", "intoken" "edit", "titles" "dummy page"})
+                        edit-token (xml1-> xml :query :pages :page (attr :edittoken))]
+                    (dosync
+                     (alter state assoc :edit-token edit-token)))))
+              (:edit-token @(:state session)))
   
   )
 
 (defn login [url user password & domain]
   "Logins into wiki, returning a cloki/SessionData record satisfying the Wiki Session protocol. 
-Throws java.io.IOException exception if login fails."
+   Throws java.io.IOException exception if login fails."
   (let [session (SessionData. url (ref (SessionState. {} nil)))
         params {"lgname" user, "lgpassword" password, "lgdomain" domain, "action" "login"}
         xml (post session params)

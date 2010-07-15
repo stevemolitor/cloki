@@ -5,17 +5,15 @@
   
   (get-content [page] "Remotely fetches the content for this page.  Returns nil if the page does not exist.
 
-The content is *not* lazy loaded or memoized - each call to get-content remotely
-fetches the latest content from the wiki.")
+    The content is *not* lazy loaded or memoized - each call to get-content remotely
+    fetches the latest content from the wiki.")
   
   (put [page params] "Updates the content for this page.
 
-The :text parameter specifies the content of the page.  Boolean options
-include :bot (defaults to true), :summary and :minor (for a minor edit).")
+    The :text parameter specifies the content of the page.  Boolean options
+    include :bot (defaults to true), :summary and :minor (for a minor edit).")
   
-  (delete [page] "Deletes this page.")
-
-  )
+  (delete [page] "Deletes this page."))
 
 (declare post)
 (declare query)
@@ -31,15 +29,12 @@ include :bot (defaults to true), :summary and :minor (for a minor edit).")
   (put [page params]
        (let [session (:session page)
              token (edit-token session)]
-;         (println "in put, session rec: " session)
          (post session (merge params {"action" "edit", "token" token, "title" (:title page)}))))
 
   (delete [page]
           (if (get-content page)
             (let [session (:session page)
                   token (edit-token session)]
-;              (println "in delete, session rec: " session)              
               (post session {"action" "delete", "token" token, "title" (:title page)})
-              )))
-  )
+              ))))
 
