@@ -12,20 +12,23 @@
     This function is provided for Mediawiki API functionality that cloki has not (yet) 
     wrapped and the caller needs to make a lower level request using the current session.")
 
-  (query [session params] "Executes query action to mediawiki.")
-  
   (post [session params] "Executes HTTP POST request.  See request.")
   
   (logout [session] "Logs out of the mediawiki session, erasing login cookie and edit token.")
 
   (get-page [session title] "Returns a cloki/PageData record the satisifies the cloki/Page protocol.
-    Use to create/update/delete the page with the given title.")
-  
-  (edit-token [session] "Lazily retrieves and stores edit token from wiki.
+    Use to create/update/delete the page with the given title."))
 
-    The edit token is used internally by cloki to create and save pages.  Curiously
-    the mediawiki API only requires one edit token per session that can be reused
-    multiple times to edit any page."))
+(defn- query [session params] (request session (merge params {"action" "query"}) "get"))
+
+(defn- edit-token [session]
+  (let [state (:state session)]
+    (when-not (:edit-token @state)
+      (let [xml (query session {"prop" "info", "intoken" "edit", "titles" "dummy page"})
+            edit-token (xml1-> xml :query :pages :page (attr :edittoken))]
+        (dosync
+         (alter state assoc :edit-token edit-token)))))
+  (:edit-token @(:state session)))
 
 (defrecord SessionState [cookies edit-token])
 
@@ -44,8 +47,6 @@
                 (alter state assoc :cookies cookies)))
              xml))
 
-  (query [session params] (request session (merge params {"action" "query"}) "get"))
-
   (post [session params] (request session (merge {"bot" "true"} params) "post"))
 
   (logout [session]
@@ -56,16 +57,7 @@
              (alter state assoc :edit-token nil))))
 
   (get-page [session title]
-            (PageData. session title))
-
-  (edit-token [session]
-              (let [state (:state session)]
-                (when-not (:edit-token @state)
-                  (let [xml (query session {"prop" "info", "intoken" "edit", "titles" "dummy page"})
-                        edit-token (xml1-> xml :query :pages :page (attr :edittoken))]
-                    (dosync
-                     (alter state assoc :edit-token edit-token)))))
-              (:edit-token @(:state session))))
+            (PageData. session title)))
 
 (defn login [url user password & domain]
   "Logins into wiki, returning a cloki/SessionData record satisfying the Wiki Session protocol. 
