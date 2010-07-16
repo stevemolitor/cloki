@@ -36,6 +36,5 @@
           (if (get-content page)
             (let [session (:session page)
                   token (edit-token session)]
-              (post session {"action" "delete", "token" token, "title" (:title page)})
-              ))))
+              (post session {"action" "delete", "token" token, "title" (:title page)})))))
 
