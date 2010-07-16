@@ -2,12 +2,9 @@
 
 (defprotocol Page
   "Functions for reading, creating, updating and deleting a page."
-  
-  (get-content [page] "Remotely fetches the content for this page.  Returns nil if the page does not exist.
 
-    The content is *not* lazy loaded or memoized - each call to get-content remotely
-    fetches the latest content from the wiki.")
-  
+  (content [page] "Returns the content of this page as a string.")
+
   (put [page params] "Updates the content for this page.
 
     The :text parameter specifies the content of the page.  Boolean options
@@ -19,13 +16,17 @@
 (declare query)
 (declare edit-token)
 
+(defn- get-content [page]
+  (let [xml (query (:session page) {"prop" "revisions", "rvprop", "content", "titles" (:title page)})]
+    (first (:content (first (xml1-> xml :query :pages :page :revisions :rev))))))
+
+(def get-content (memoize get-content))
+
 (defrecord PageData [session title]
   Page
 
-  (get-content [page]
-               (let [xml (query (:session page) {"prop" "revisions", "rvprop", "content", "titles" (:title page)})]
-                 (first (:content (first (xml1-> xml :query :pages :page :revisions :rev))))))
-
+  (content [page] (get-content page))
+  
   (put [page params]
        (let [session (:session page)
              token (edit-token session)]

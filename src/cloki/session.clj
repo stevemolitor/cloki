@@ -3,6 +3,11 @@
 (defprotocol Session
   "An interaction with a Mediawiki instance"
 
+  (logout [session] "Logs out of the mediawiki session, erasing login cookie and edit token.")
+
+  (get-page [session title] "Returns a cloki/PageData record the satisifies the cloki/Page protocol.
+    Use to create/update/delete the page with the given title.")
+
   (request [session params method] "Executes HTTP request to mediawiki.
 
     Returns zip of xml response.  Updates session state as required. Throws
@@ -10,16 +15,11 @@
     defaults to 'xml'; use the :format parameter to specify a different format.
      
     This function is provided for Mediawiki API functionality that cloki has not (yet) 
-    wrapped and the caller needs to make a lower level request using the current session.")
-
-  (post [session params] "Executes HTTP POST request.  See request.")
-  
-  (logout [session] "Logs out of the mediawiki session, erasing login cookie and edit token.")
-
-  (get-page [session title] "Returns a cloki/PageData record the satisifies the cloki/Page protocol.
-    Use to create/update/delete the page with the given title."))
+    wrapped and the caller needs to make a lower level request using the current session."))
 
 (defn- query [session params] (request session (merge params {"action" "query"}) "get"))
+
+(defn- post [session params] (request session (merge {"bot" "true"} params) "post"))
 
 (defn- edit-token [session]
   (let [state (:state session)]
@@ -46,8 +46,6 @@
                (dosync
                 (alter state assoc :cookies cookies)))
              xml))
-
-  (post [session params] (request session (merge {"bot" "true"} params) "post"))
 
   (logout [session]
           (post session {"action" "logout"})
