@@ -20,12 +20,12 @@
   (let [xml (query (:session page) {"prop" "revisions", "rvprop", "content", "titles" (:title page)})]
     (first (:content (first (xml1-> xml :query :pages :page :revisions :rev))))))
 
-(def get-content (memoize get-content))
+(def memoized-get-content (memoize get-content))
 
 (defrecord PageData [session title]
   Page
 
-  (content [page] (get-content page))
+  (content [page] (memoized-get-content page))
   
   (put [page params]
        (let [session (:session page)
@@ -37,4 +37,5 @@
             (let [session (:session page)
                   token (edit-token session)]
               (post session {"action" "delete", "token" token, "title" (:title page)})))))
+
 
